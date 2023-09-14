@@ -1,2 +1,2 @@
 # nova-auth
-Authentication service
+Authentication service.
