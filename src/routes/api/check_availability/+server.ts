@@ -1,5 +1,5 @@
 import {json,  type RequestHandler } from "@sveltejs/kit"
-import { username_available, email_available} from "$lib/server/db";
+import { username_available, email_available} from "../../../lib/server/db";
 
 /*
     POST /api/check_availability

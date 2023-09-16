@@ -2,6 +2,8 @@
 import type { UserData } from '$lib/types';
 import { randomUUID } from 'crypto';
 import type { Db } from 'mongodb';
+import 'dotenv/config';
+
 
 // Development DB it's a simple JSON file ./db.json
 if (!import.meta.env.DEV) {
@@ -11,15 +13,11 @@ if (!import.meta.env.DEV) {
 
 import { MongoClient, ServerApiVersion } from 'mongodb';
 
-let uri = "";
-if (import.meta.env.DEV) {
-    uri = "mongodb+srv://nova:NOVA2023PASSKEY@dev.8treruh.mongodb.net/?retryWrites=true&w=majority";
-} else {
-    // TODO: Add production DB
-}
+const DB_URI = process.env.DB_URI || "";
+const DB_NAME = import.meta.env.DEV ? "dev" : "prod";
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
-const client = new MongoClient(uri, {
+const client = new MongoClient(DB_URI, {
     serverApi: {
         version: ServerApiVersion.v1,
         strict: true,
@@ -32,7 +30,7 @@ export async function with_db(fn: (db: Db) => Promise<any>) {
         // Connect the client to the server	(optional starting in v4.7)
         await client.connect();
 
-        return await fn(client.db("nova"));
+        return await fn(client.db(DB_NAME));
 
     } finally {
         // Ensures that the client will close when you finish/error

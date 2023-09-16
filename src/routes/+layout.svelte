@@ -8,7 +8,7 @@
 	import { fly } from 'svelte/transition';
 	import { cubicIn, cubicOut } from 'svelte/easing';
 
-	import Loader from '$lib/components/Loader.svelte';
+	import { BarLoader } from 'svelte-loading-spinners';
 
 	import { beforeNavigate, afterNavigate } from '$app/navigation';
 
@@ -28,7 +28,7 @@
 </script>
 
 {#if isLoading}
-	<Loader />
+	<BarLoader />
 {/if}
 
 {#key data.pathname}

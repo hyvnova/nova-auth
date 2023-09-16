@@ -1,5 +1,5 @@
 import type { Actions } from "./$types";
-import { add_user, get_user, get_user_token } from "$lib/server/db";
+import { add_user, get_user, get_user_token } from "../../lib/server/db";
 import { redirect } from "@sveltejs/kit";
 import bcrypt from 'bcryptjs';
 
