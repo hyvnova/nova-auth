@@ -1,6 +1,6 @@
 {
 	"name": "nova-auth",
-	"version": "0.0.1",
+	"version": "1.0",
 	"private": true,
 	"scripts": {
 		"dev": "vite dev",
@@ -14,8 +14,11 @@
 	"devDependencies": {
 		"@sveltejs/adapter-auto": "^2.0.0",
 		"@sveltejs/kit": "^1.20.4",
+		"@types/bcryptjs": "^2.4.4",
+		"@types/node": "^20.6.1",
 		"@zerodevx/svelte-toast": "^0.9.5",
 		"autoprefixer": "^10.4.15",
+		"bcryptjs": "^2.4.3",
 		"postcss": "^8.4.29",
 		"prettier": "^2.8.0",
 		"prettier-plugin-svelte": "^2.10.1",
@@ -30,6 +33,7 @@
 	"type": "module",
 	"dependencies": {
 		"@fortawesome/free-brands-svg-icons": "^6.4.2",
-		"@fortawesome/free-solid-svg-icons": "^6.4.2"
+		"@fortawesome/free-solid-svg-icons": "^6.4.2",
+		"mongodb": "^6.1.0"
 	}
 }
