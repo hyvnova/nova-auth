@@ -1,51 +1,40 @@
-import type { Actions } from "./$types";
-import { add_user, get_user, get_user_token } from "../../lib/server/db";
+import type { Actions, PageServerLoad } from "./$types";
+import { is_token_valid, get_user, get_user_token, add_user_partial } from "../../lib/server/db";
 import { redirect } from "@sveltejs/kit";
 import bcrypt from 'bcryptjs';
 
+/**
+ * Load function to check if user is already logged in
+ * If logged in, redirects to /me
+ */
+export const load: PageServerLoad = async ({ cookies }) => {
+    if (cookies.get("token") && await is_token_valid(cookies.get("token") as string)) {
+        throw redirect(302, "/me");
+    }
+}
 
+/**
+ * Actions object containing default action
+ * Handles both sign up and login forms submission
+ * In case of error, returns { success: false, error: string }
+ * In case of success (login or sign up), will redirect to /me
+ */
 export const actions = {
-    // Default actions takes in all form data, could be sing up or login
-    /*
-    Sign up form data:
-    username: string
-    email: string 
-    password: string
-
-    Login form data:
-    username: string
-    password: string
-    */
-
-    // @ts-ignore
     default: async ({ request, cookies }) => {
-        /*
-        Handles both sign up and login forms submission
-        In case of error, returns { success: false, error: string }
-        In case of success (login or sign up), will redirect to /me
-        */
-
         const data = await request.formData();
-
-
-        // All parameters are required and validated by the form
         const username = data.get("username") as string;
         const email = data.get("email") as string;
-
-        // Hash password
         const password = await bcrypt.hash(data.get("password") as string, 10);
 
         // If email is present, then it's a sign up form
         if (email) {
-            await add_user({
+            await add_user_partial({
                 username,
                 email,
-                password,
-                token: "" // Will be set by add_user
+                password
             });
-
-        // Otherwise it's a login form
         } else {
+            // Otherwise it's a login form
             const user = await get_user(username);
 
             // If user is not found, then it's an error
@@ -59,7 +48,7 @@ export const actions = {
             }
         }
 
-        // Get id from database
+        // Get token from database to check if user exists / everything is correct
         const token = await get_user_token(username);
 
         if (!token) {

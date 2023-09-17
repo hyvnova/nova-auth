@@ -1,5 +1,7 @@
 import {json,  type RequestHandler } from "@sveltejs/kit"
-import { username_available, email_available} from "../../../lib/server/db";
+import { username_available, email_available} from "$lib/server/db";
+import {REGEX_EMAIL, REGEX_USERNAME} from "$lib/types";
+
 
 /*
     POST /api/check_availability
@@ -28,6 +30,8 @@ enum CheckResult {
     invalid = "invalid",
     taken = "taken"
 }
+
+
 
 export const POST: RequestHandler = async ({ request }) => {
     let data: ExpectedParams = await request.json();
@@ -61,8 +65,7 @@ export const POST: RequestHandler = async ({ request }) => {
 
     switch (type) {
         case CheckType.username:
-            const usernameRegex = /^[a-zA-Z0-9_]{1,24}$/;
-            if (!usernameRegex.test(value)) {
+            if (!REGEX_USERNAME.test(value)) {
                 return json({
                     result: CheckResult.invalid,
                 }, {status: 200})
@@ -73,8 +76,7 @@ export const POST: RequestHandler = async ({ request }) => {
         
         case CheckType.email:
             // Check if email is valid
-            const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-            if (!emailRegex.test(value)) {
+            if (!REGEX_EMAIL.test(value)) {
                 return json({
                     result: CheckResult.invalid,
                 }, {status: 200})

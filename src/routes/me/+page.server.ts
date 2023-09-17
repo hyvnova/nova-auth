@@ -1,5 +1,5 @@
 import type { PageServerLoad } from "./$types"
-import { get_by_token } from "../../lib/server/db"
+import { get_by_token } from '$lib/server/db'
 import { redirect } from "@sveltejs/kit"
 
 export const load: PageServerLoad = async ({ cookies }) => {
