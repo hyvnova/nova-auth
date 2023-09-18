@@ -40,7 +40,7 @@
     >
       <div class="flex flex-col items-center justify-center">
         <h1 class="m-1 text-4xl font-bold">Account</h1>
-        <p>
+        <p class="my-2 mb-4 text-center">
           Enter you credentials to <strong>Log In</strong> or
           <strong>Sign Up</strong>
         </p>

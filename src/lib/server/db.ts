@@ -61,10 +61,10 @@ export function add_user_partial(data: Partial<UserData>) {
 }
 
 // Function to get a user by username
-export async function get_user(username: string) {
+export async function get_user(username: string): Promise<UserData | null> {
     return await with_db(async db => {
         const collection = db.collection("users");
-        let user = await collection.findOne({
+        let user = await collection.findOne<UserData>({
             username
         });
 

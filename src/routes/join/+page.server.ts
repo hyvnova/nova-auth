@@ -2,6 +2,8 @@ import type { Actions, PageServerLoad } from "./$types";
 import { is_token_valid, get_user, get_user_token, add_user_partial } from "../../lib/server/db";
 import { redirect } from "@sveltejs/kit";
 import bcrypt from 'bcryptjs';
+import 'dotenv/config';
+
 
 /**
  * Load function to check if user is already logged in
@@ -24,7 +26,7 @@ export const actions = {
         const data = await request.formData();
         const username = data.get("username") as string;
         const email = data.get("email") as string;
-        const password = await bcrypt.hash(data.get("password") as string, 10);
+        const password = await bcrypt.hash(data.get("password") as string, process.env.SALT as string);
 
         // If email is present, then it's a sign up form
         if (email) {
@@ -57,6 +59,7 @@ export const actions = {
 
         // Save token to session cookie
         cookies.set("token", token);
+        cookies.set("username", username);
 
         // If everything is correct, then redirect to /me
         throw redirect(302, "/me");
