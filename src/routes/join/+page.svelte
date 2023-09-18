@@ -16,7 +16,7 @@
   export let form: ActionData;
 
   $: if (form) {
-    // if form exists, it means that it failed to join a gallery
+    // If there was an error, show it
     toast.push(form.error as string, {
       theme: {
         toast: "bg-red-100 text-white",

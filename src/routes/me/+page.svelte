@@ -1,48 +1,30 @@
 <script lang="ts">
     import ActionCard from "$lib/components/ActionCard.svelte";
+    import {
+        faEye,
+        faGear,
+        faUserEdit,
+    } from "@fortawesome/free-solid-svg-icons";
     import type { PageServerData } from "./$types";
-
-    import { faUserEdit, faGear, faEye } from "@fortawesome/free-solid-svg-icons";
 
     export let data: PageServerData;
 </script>
 
-<svelte:head>
-    <title>Me</title>
-</svelte:head>
-
-<div class="bg w-screen h-screen flex flex-col justify-center items-center">
-    <main class=" w-full container h-auto">
-        <div class="flex justify-center items-center m-1">
-            <h1 class="text-3xl font-bold">Quick Actions</h1>
-        </div>
-
-        <div class="flex container h-auto justify-center items-center w-full">
+<div class="h-screen flex flex-col items-center">
+    <header class="pt-4 flex flex-col items-center">
+        <h2 class="text-2xl mb-4">Quick Actions</h2>
+        <div class="flex flex-wrap justify-center">
             <ActionCard
                 icon={faUserEdit}
                 title="Edit Profile"
-                destination="/profile/{encodeURIComponent(data.username)}"
+                destination="/profile/{data.username}?show_edit=true"
             />
-
             <ActionCard
                 icon={faGear}
-                title="Configuration"
-                destination="/"
+                title="Settings"
+                destination="/settings"
             />
-
-            <ActionCard
-            icon={faEye}
-            title="View Data"
-            destination="/"
-        />
+            <ActionCard icon={faEye} title="View Data" destination="/data" />
         </div>
-    </main>
+    </header>
 </div>
-
-<style>
-    .bg {
-        background-image: url("./assets/dark_bg.jpg");
-        background-repeat: no-repeat;
-        background-attachment: fixed; /* Optional - keeps the background fixed while scrolling */
-    }
-</style>

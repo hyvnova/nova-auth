@@ -72,10 +72,6 @@ export async function get_user(username: string): Promise<UserData | null> {
             return null;
         }
 
-        // Remove password and token from user data
-        user.password = "";
-        user.token = "";
-
         return user;
     });
 }

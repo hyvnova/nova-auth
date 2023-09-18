@@ -10,7 +10,10 @@ import 'dotenv/config';
  * If logged in, redirects to /me
  */
 export const load: PageServerLoad = async ({ cookies }) => {
+    console.log("Checking if user is logged in");
+    
     if (cookies.get("token") && await is_token_valid(cookies.get("token") as string)) {
+        console.log("User already logged in");
         throw redirect(302, "/me");
     }
 }
@@ -26,14 +29,14 @@ export const actions = {
         const data = await request.formData();
         const username = data.get("username") as string;
         const email = data.get("email") as string;
-        const password = await bcrypt.hash(data.get("password") as string, process.env.SALT as string);
+        const password = data.get("password") as string
 
         // If email is present, then it's a sign up form
         if (email) {
             await add_user_partial({
                 username,
                 email,
-                password
+                password: bcrypt.hashSync(password, 11),
             });
         } else {
             // Otherwise it's a login form
@@ -45,7 +48,7 @@ export const actions = {
             }
 
             // If password is incorrect, then it's an error
-            if (user.password !== password) {
+            if (!bcrypt.compareSync(password, user.password)) {
                 return { success: false, error: "Incorrect password" };
             }
         }
@@ -58,8 +61,12 @@ export const actions = {
         }
 
         // Save token to session cookie
-        cookies.set("token", token);
-        cookies.set("username", username);
+        cookies.set("token", token, {
+            secure: process.env.NODE_ENV === "production"
+        });
+        cookies.set("username", username, {
+            secure: process.env.NODE_ENV === "production"
+        });
 
         // If everything is correct, then redirect to /me
         throw redirect(302, "/me");

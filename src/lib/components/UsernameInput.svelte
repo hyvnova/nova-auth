@@ -43,5 +43,11 @@
           {$username_available === CheckResult.taken ? 'border-blue-500' : ''}
           {$username_available === CheckResult.invalid ? 'border-red-500' : ''}
           "
+	on:change={
+		(e) => {
+		// @ts-ignore
+			username = e.target.value;
+		}
+	}
 	bind:value={username}
 />
