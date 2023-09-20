@@ -6,8 +6,24 @@
         faUserEdit,
     } from "@fortawesome/free-solid-svg-icons";
     import type { PageServerData } from "./$types";
+    import { redirect } from "@sveltejs/kit";
 
     export let data: PageServerData;
+
+
+    function handleLogout() {
+        fetch("/api/session", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                action: "logout",
+            }),
+        }).then(() => {
+            window.location.href = "/";
+        });
+    }
 </script>
 
 <div class="h-screen flex flex-col items-center">
@@ -25,6 +41,10 @@
                 destination="/settings"
             />
             <ActionCard icon={faEye} title="View Data" destination="/data" />
+
         </div>
     </header>
+
+
+    <button class="mt-4 p-2 bg-red-500 rounded-md text-white" on:click={handleLogout}>Logout</button>
 </div>

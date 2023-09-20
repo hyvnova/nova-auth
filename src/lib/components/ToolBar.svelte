@@ -12,8 +12,6 @@
     let search_modal_open = writable(false);
 
 
-    
-
 </script>
 
 <footer

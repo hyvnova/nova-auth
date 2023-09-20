@@ -1,7 +1,7 @@
 import type { PageServerLoad, Actions } from "./$types"
-import { get_by_token, get_user_profile, update_user } from "$lib/server/db"
+import { get_by, get_from, update_user } from "$lib/server/db"
 import { error, redirect } from "@sveltejs/kit";
-import { REGEX_IMAGE_URL, REGEX_USERNAME } from "$lib/types";
+import { REGEX_IMAGE_URL, REGEX_USERNAME } from "$lib";
 
 export const load: PageServerLoad = async ({ cookies, params, url }) => {
     // Get the prfile username from the params (It's a valid username)
@@ -19,7 +19,8 @@ export const load: PageServerLoad = async ({ cookies, params, url }) => {
     // If the token is present, check ownership
     if (token) {
         // Get the user data from the token
-        const user = await get_by_token(token);
+        const user = await get_by(token);
+
         if (user) {
             // If the user is found, check if the username matches
             owner = user.username === username;
@@ -36,7 +37,7 @@ export const load: PageServerLoad = async ({ cookies, params, url }) => {
     }
 
     // Get user profile data
-    const profile = await get_user_profile(username);
+    const profile = await get_by(username);
 
     // If the profile is not found,go to error page
     if (!profile) {

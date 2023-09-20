@@ -1,7 +1,7 @@
 import {json,  type RequestHandler } from "@sveltejs/kit"
-import { username_available, email_available} from "$lib/server/db";
-import {REGEX_EMAIL, REGEX_USERNAME} from "$lib/types";
-
+import { find_by } from "$lib/server/db";
+import { CheckResult } from "$lib/types";
+import { REGEX_EMAIL, REGEX_USERNAME } from "$lib";
 
 /*
     POST /api/check_availability
@@ -25,14 +25,6 @@ type ExpectedParams = {
     value?: string
 }
 
-enum CheckResult {
-    available = "available",
-    invalid = "invalid",
-    taken = "taken"
-}
-
-
-
 export const POST: RequestHandler = async ({ request }) => {
     let data: ExpectedParams = await request.json();
 
@@ -55,12 +47,12 @@ export const POST: RequestHandler = async ({ request }) => {
     // Check if username is available
     let available: boolean = false;
     if (type === CheckType.username) {
-        available = await username_available(value);
+        available = await find_by({username: value}) === null;
     }
 
     // Check if email is available
     else if (type === CheckType.email) {
-        available = await email_available(value);
+        available = await find_by({email: value}) === null;
     }
 
     switch (type) {
@@ -71,7 +63,7 @@ export const POST: RequestHandler = async ({ request }) => {
                 }, {status: 200})
             }
 
-            available = await username_available(value);
+            available = await find_by({username: value}) === null;
             break;
         
         case CheckType.email:
@@ -82,7 +74,7 @@ export const POST: RequestHandler = async ({ request }) => {
                 }, {status: 200})
             }
 
-            available = await email_available(value);
+            available = await find_by({email: value}) === null;
             break;
 
         default:

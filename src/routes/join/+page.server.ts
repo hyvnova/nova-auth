@@ -1,5 +1,5 @@
 import type { Actions, PageServerLoad } from "./$types";
-import { is_token_valid, get_user, get_user_token, add_user_partial } from "../../lib/server/db";
+import { find_by, get_by, get_from, add_user } from "../../lib/server/db";
 import { redirect } from "@sveltejs/kit";
 import bcrypt from 'bcryptjs';
 import 'dotenv/config';
@@ -10,10 +10,7 @@ import 'dotenv/config';
  * If logged in, redirects to /me
  */
 export const load: PageServerLoad = async ({ cookies }) => {
-    console.log("Checking if user is logged in");
-    
-    if (cookies.get("token") && await is_token_valid(cookies.get("token") as string)) {
-        console.log("User already logged in");
+    if (cookies.get("token") && await find_by({token: cookies.get("token") as string})) {
         throw redirect(302, "/me");
     }
 }
@@ -33,14 +30,14 @@ export const actions = {
 
         // If email is present, then it's a sign up form
         if (email) {
-            await add_user_partial({
+            await add_user({
                 username,
                 email,
                 password: bcrypt.hashSync(password, 11),
             });
         } else {
             // Otherwise it's a login form
-            const user = await get_user(username);
+            const user = await get_by(username);
 
             // If user is not found, then it's an error
             if (!user) {
@@ -54,17 +51,19 @@ export const actions = {
         }
 
         // Get token from database to check if user exists / everything is correct
-        const token = await get_user_token(username);
-
+        let token = await get_from(username, "token");
+        
         if (!token) {
             return { success: false, error: "User not found" };
         }
 
         // Save token to session cookie
         cookies.set("token", token, {
+            path: "/",
             secure: process.env.NODE_ENV === "production"
         });
         cookies.set("username", username, {
+            path: "/",
             secure: process.env.NODE_ENV === "production"
         });
 

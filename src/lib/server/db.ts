@@ -1,4 +1,4 @@
-import { DEFAULT_USER_DATA, type ProfileData, type UserData } from '$lib/types';
+import type { UserData } from '$lib/types';
 import { randomUUID } from 'crypto';
 import type { Db } from 'mongodb';
 import 'dotenv/config';
@@ -20,77 +20,75 @@ const client = new MongoClient(DB_URI, {
         version: ServerApiVersion.v1,
         strict: true,
         deprecationErrors: true,
-    }
+    },
+    maxPoolSize: 100,
 });
 
-// Function to connect to the database and execute a function
-export async function with_db(fn: (db: Db) => Promise<any>) {
+
+// Connect the client to the server (optional starting in v4.7)
+client.connect();
+
+// Function to execute a function with the database
+export async function with_db<T>(fn: (db: Db) => Promise<T>): Promise<T> {
+    const db = client.db(DB_NAME);
     try {
-        // Connect the client to the server (optional starting in v4.7)
-        await client.connect();
-        return await fn(client.db(DB_NAME));
+        return await fn(db);
     } finally {
-        // Ensures that the client will close when you finish/error
-        await client.close();
+        // Do nothing
     }
 }
 
-// Function to add a user with all the fields from UserData
-export async function add_user(data: UserData) {
+// Add a user to the database
+export async function add_user(data: Partial<UserData>) {
     await with_db(async db => {
         const collection = db.collection<UserData>("users");
+        
         data.token = randomUUID();
-        await collection.insertOne(data);
-    });
-}
-
-// Function to add a user with partial data. The rest of the fields will be filled with the default values from DEFAULT_USER_DATA
-export function add_user_partial(data: Partial<UserData>) {
-    return with_db(async db => {
-        const collection = db.collection<UserData>("users");
-        data.token = randomUUID();
-        // fill in the missing fields
-        const user_data: UserData = { ...DEFAULT_USER_DATA, ...data };
 
         // Assign a default avatar 
-        const avatar_id = Math.floor(Math.random() * 4) + 1;
-        user_data.avatar ||= "/default_avatars/" + avatar_id + ".jpg";
+        data.avatar ||= `/default_avatars/${Math.floor(Math.random() * 4) + 1}.jpg`;
 
-        await collection.insertOne(user_data);
+        await collection.insertOne(data as UserData);
     });
 }
 
-// Function to get a user by username
-export async function get_user(username: string): Promise<UserData | null> {
+// Find a user by any field
+export async function find_by(fields: Partial<UserData>): Promise<UserData | null> {
+    return await with_db(async db => {
+        const collection = db.collection<UserData>("users");
+        const user_data = await collection.findOne(fields);
+        return user_data ?? null;
+    });
+}
+
+// Find users matching a query and return specific fields
+export async function find_matching(query: string, fields: (keyof UserData)[]): Promise<Partial<UserData>[]> {
+    const projection: any = {};
+    fields.forEach(field => projection[field] = 1);
+
+    return await with_db(async db => {
+        const collection = db.collection<UserData>("users");
+        const user_data = await collection.find<Partial<UserData>>({
+            $or: [
+                { username: { $regex: query, $options: "i" } },
+                { email: { $regex: query, $options: "i" } }
+            ]
+        }, { projection }).toArray();
+        return user_data ?? [];
+    });
+}
+
+// Get a user by token or email
+export async function get_by(identifier: string): Promise<UserData | null> {
     return await with_db(async db => {
         const collection = db.collection("users");
-        let user = await collection.findOne<UserData>({
-            username
+        const user_data = await collection.findOne<UserData>({
+            $or: [
+                { token: identifier },
+                { email: identifier },
+                { username: identifier}
+            ]
         });
-
-        if (!user) {
-            return null;
-        }
-
-        return user;
-    });
-}
-
-// Function to get a user's token by username
-export async function get_user_token(username: string): Promise<string | null> {
-    return await with_db(async db => {
-        let user_data = await db.collection("users").findOne<UserData>({ username });
-        if (!user_data) {
-            return null;
-        }
-        return user_data.token;
-    });
-}
-
-// Function to get a user by token
-export async function get_by_token(token: string): Promise<UserData | null> {
-    return await with_db(async db => {
-        let user_data = await db.collection("users").findOne<UserData>({ token });
         if (!user_data) {
             return null;
         }
@@ -100,79 +98,41 @@ export async function get_by_token(token: string): Promise<UserData | null> {
     });
 }
 
-// Function to check if a username is available
-export async function username_available(username: string): Promise<boolean> {
-    try {
-        return await with_db(async db => {
-            const collection = db.collection("users");
-            return await collection.findOne({
-                username
-            }) === null;
-        });
-    } catch (e) {
-        return false;
-    }
-}
 
-// Function to check if an email is available
-export async function email_available(email: string): Promise<boolean> {
-    try {
-        return await with_db(async db => {
-        const collection = db.collection("users");
-        return await collection.findOne({
-            email
-        }) === null;
-    });
-    } catch (e) {
-        return false;
-    }
-}
+// Get specific fields from a user by token, username or email
+export async function get_from<T=string>(identifier: string, field: keyof UserData): Promise<T | null> {
+    const projection: any = {};
+    projection[field] = 1;
 
-// Function to get a user by email
-export async function get_user_by_email(email: string): Promise<UserData | null> {
     return await with_db(async db => {
         const collection = db.collection("users");
-        return await collection.findOne({
-            email
-        });
+        const user_data = await collection.findOne<UserData>({
+            $or: [
+                { username: identifier },
+                { token: identifier },
+                { email: identifier }
+            ]
+        }, { projection });
+
+        return user_data ? user_data[field] as T : null;
     });
 }
 
-// Function to check if a token is valid
-export async function is_token_valid(token: string): Promise<boolean> {
+export async function update_user(identifier: string, data: Partial<UserData>) {
     return await with_db(async db => {
+        
         const collection = db.collection("users");
-        return await collection.findOne({
-            token
-        }) !== null;
-    });
-}
 
-export async function get_user_profile(username: string): Promise<ProfileData | null> {
-    return await with_db(async db => {
-        const collection = db.collection("users");
-        let user =  await collection.findOne<UserData>({
-            username
-        });
-
-        if (!user) {
-            return null;
-        }
-
-        return {
-            username: user.username,
-            avatar: user.avatar,
-        }
-    });
-}
-
-export async function update_user(token: string, data: Partial<UserData>) {
-    return await with_db(async db => {
-        const collection = db.collection("users");
+        // Update the user
         await collection.updateOne({
-            token
+            $or: [
+                { token: identifier },
+                { username: identifier },
+                { email: identifier }
+            ]
         }, {
             $set: data
         });
+
     });
 }
