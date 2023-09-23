@@ -3,12 +3,6 @@ import { randomUUID } from 'crypto';
 import type { Db } from 'mongodb';
 import 'dotenv/config';
 
-
-// This file should only be used in development mode
-if (!import.meta.env.DEV) {
-    throw new Error("This file should only be used in development mode");
-}
-
 import { MongoClient, ServerApiVersion } from 'mongodb';
 
 // Database URI and name
