@@ -12,6 +12,7 @@ export type UserData = {
     email: string;
     token: string;
     avatar: string;
+    verified: boolean;
 }
 
 // Public data

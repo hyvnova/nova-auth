@@ -3,6 +3,7 @@ import { randomUUID } from 'crypto';
 import type { Db } from 'mongodb';
 import 'dotenv/config';
 
+
 // This file should only be used in development mode
 if (!import.meta.env.DEV) {
     throw new Error("This file should only be used in development mode");
@@ -24,11 +25,14 @@ const client = new MongoClient(DB_URI, {
     maxPoolSize: 100,
 });
 
-
 // Connect the client to the server (optional starting in v4.7)
 client.connect();
 
-// Function to execute a function with the database
+/**
+ * Execute a function with the database
+ * @param fn - The function to execute with the database
+ * @returns The result of the function
+ */
 export async function with_db<T>(fn: (db: Db) => Promise<T>): Promise<T> {
     const db = client.db(DB_NAME);
     try {
@@ -38,11 +42,14 @@ export async function with_db<T>(fn: (db: Db) => Promise<T>): Promise<T> {
     }
 }
 
-// Add a user to the database
+/**
+ * Add a user to the database
+ * @param data - The user data to add
+ */
 export async function add_user(data: Partial<UserData>) {
     await with_db(async db => {
         const collection = db.collection<UserData>("users");
-        
+
         data.token = randomUUID();
 
         // Assign a default avatar 
@@ -52,7 +59,11 @@ export async function add_user(data: Partial<UserData>) {
     });
 }
 
-// Find a user by any field
+/**
+ * Find a user by any field
+ * @param fields - The fields to search for
+ * @returns The user data if found, otherwise null
+ */
 export async function find_by(fields: Partial<UserData>): Promise<UserData | null> {
     return await with_db(async db => {
         const collection = db.collection<UserData>("users");
@@ -61,7 +72,12 @@ export async function find_by(fields: Partial<UserData>): Promise<UserData | nul
     });
 }
 
-// Find users matching a query and return specific fields
+/**
+ * Find users matching a query and return specific fields
+ * @param query - The query to match against
+ * @param fields - The fields to return
+ * @returns An array of user data matching the query and fields
+ */
 export async function find_matching(query: string, fields: (keyof UserData)[]): Promise<Partial<UserData>[]> {
     const projection: any = {};
     fields.forEach(field => projection[field] = 1);
@@ -78,7 +94,11 @@ export async function find_matching(query: string, fields: (keyof UserData)[]): 
     });
 }
 
-// Get a user by token or email
+/**
+ * Get a user by token or email or username
+ * @param identifier - The token or email to search for
+ * @returns The user data if found, otherwise null
+ */
 export async function get_by(identifier: string): Promise<UserData | null> {
     return await with_db(async db => {
         const collection = db.collection("users");
@@ -86,7 +106,7 @@ export async function get_by(identifier: string): Promise<UserData | null> {
             $or: [
                 { token: identifier },
                 { email: identifier },
-                { username: identifier}
+                { username: identifier }
             ]
         });
         if (!user_data) {
@@ -98,9 +118,13 @@ export async function get_by(identifier: string): Promise<UserData | null> {
     });
 }
 
-
-// Get specific fields from a user by token, username or email
-export async function get_from<T=string>(identifier: string, field: keyof UserData): Promise<T | null> {
+/**
+ * Get specific fields from a user by token, username or email
+ * @param identifier - The token, username, or email to search for
+ * @param field - The field to return
+ * @returns The value of the specified field if found, otherwise null
+ */
+export async function get_from<T = string>(identifier: string, field: keyof UserData): Promise<T | null> {
     const projection: any = {};
     projection[field] = 1;
 
@@ -118,9 +142,14 @@ export async function get_from<T=string>(identifier: string, field: keyof UserDa
     });
 }
 
+/**
+ * Update a user in the database
+ * @param identifier - The token, username, or email of the user to update
+ * @param data - The updated user data
+ */
 export async function update_user(identifier: string, data: Partial<UserData>) {
     return await with_db(async db => {
-        
+
         const collection = db.collection("users");
 
         // Update the user
@@ -132,6 +161,27 @@ export async function update_user(identifier: string, data: Partial<UserData>) {
             ]
         }, {
             $set: data
+        });
+
+    });
+}
+
+/**
+ * Delete a user from the database
+ * @param identifier - The token, username, or email of the user to delete
+ */
+export async function delete_user(identifier: string) {
+    return await with_db(async db => {
+
+        const collection = db.collection("users");
+
+        // Delete the user
+        await collection.deleteOne({
+            $or: [
+                { token: identifier },
+                { username: identifier },
+                { email: identifier }
+            ]
         });
 
     });

@@ -3,16 +3,61 @@ import { find_by, get_by, get_from, add_user } from "../../lib/server/db";
 import { redirect } from "@sveltejs/kit";
 import bcrypt from 'bcryptjs';
 import 'dotenv/config';
+import type { UserData } from "$lib/types";
+
+
+// Callback url to redirect to after authentication
+let redirect_callback: string | null;
 
 
 /**
  * Load function to check if user is already logged in
  * If logged in, redirects to /me
  */
-export const load: PageServerLoad = async ({ cookies }) => {
-    if (cookies.get("token") && await find_by({token: cookies.get("token") as string})) {
+export const load: PageServerLoad = async ({ cookies, url }) => {
+    // Get callback url from url params (if present, this is used when authenticating)
+    let params = new URLSearchParams(url.search);
+    let callback = params.get("callback");
+    let want = params.get("want");  // What fields to return, separated by commas. Possible values: email, avatar, username
+    
+    if (callback) {
+        callback = decodeURIComponent(callback);
+
+        // If callback is present, then want is present too
+        // @ts-ignore
+        want = want.split(",");
+    }
+
+    let token = cookies.get("token");
+
+    if (token && await find_by({token: token as string})) {
+
+        // If callback is present, then redirect to callback
+        if (callback) {
+            let params = new URLSearchParams({
+                success: "true"
+            });
+
+            let user = await get_by(token) as UserData;
+
+            // Reduce user data to avoid leaking data
+            let { username, email, avatar } = user;
+            let reduced_user_data = { username, email, avatar };
+
+            // @ts-ignore
+            for (let field of want) {
+                // @ts-ignore
+                params.append(field, reduced_user_data[field]);
+            }
+
+            throw redirect(302, callback + "?" + params.toString());
+        }
+
         throw redirect(302, "/me");
     }
+
+    // If not logged in, but callback is present save it to callback variable
+    redirect_callback = callback;
 }
 
 /**
@@ -22,7 +67,8 @@ export const load: PageServerLoad = async ({ cookies }) => {
  * In case of success (login or sign up), will redirect to /me
  */
 export const actions = {
-    default: async ({ request, cookies }) => {
+    default: async ({ request, cookies, url }) => {
+
         const data = await request.formData();
         const username = data.get("username") as string;
         const email = data.get("email") as string;
@@ -66,6 +112,27 @@ export const actions = {
             path: "/",
             secure: process.env.NODE_ENV === "production"
         });
+
+        // If callback is present, then redirect to callback
+        if (redirect_callback) {
+            let params = new URLSearchParams({
+                success: "true"
+            });
+
+            let user = await get_by(token) as UserData;
+
+            // Reduce user data to avoid leaking data
+            let { username, email, avatar } = user;
+            let reduced_user_data = { username, email, avatar };
+
+            // @ts-ignore
+            for (let field of want) {
+                // @ts-ignore
+                params.append(field, reduced_user_data[field]);
+            }
+
+            throw redirect(302, redirect_callback + "?" + params.toString());
+        }
 
         // If everything is correct, then redirect to /me
         throw redirect(302, "/me");
