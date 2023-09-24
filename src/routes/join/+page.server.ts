@@ -30,7 +30,7 @@ export const load: PageServerLoad = async ({ cookies, url }) => {
 
     let token = cookies.get("token");
 
-    if (token && await find_by({token: token as string})) {
+    if (token && await get_by(token)) {
 
         // If callback is present, then redirect to callback
         if (callback) {
@@ -67,7 +67,7 @@ export const load: PageServerLoad = async ({ cookies, url }) => {
  * In case of success (login or sign up), will redirect to /me
  */
 export const actions = {
-    default: async ({ request, cookies, url }) => {
+    default: async ({ request, cookies }) => {
 
         const data = await request.formData();
         const username = data.get("username") as string;
@@ -83,12 +83,7 @@ export const actions = {
             });
         } else {
             // Otherwise it's a login form
-            const user = await get_by(username);
-
-            // If user is not found, then it's an error
-            if (!user) {
-                return { success: false, error: "User not found" };
-            }
+            const user = await get_by(username) as UserData;
 
             // If password is incorrect, then it's an error
             if (!bcrypt.compareSync(password, user.password)) {
