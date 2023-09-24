@@ -179,8 +179,4 @@ export async function delete_user(identifier: string) {
         });
 
     });
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> main
