@@ -6,8 +6,12 @@ import 'dotenv/config';
 import { MongoClient, ServerApiVersion } from 'mongodb';
 
 // Database URI and name
-const DB_URI = process.env.DB_URI || "";
+const DB_URI = process.env.DB_URI;
 const DB_NAME = import.meta.env.DEV ? "dev" : "prod";
+
+if (!DB_URI) {
+    throw new Error("Database URI not set");
+}
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(DB_URI, {

@@ -13,6 +13,7 @@ export type UserData = {
     token: string;
     avatar: string;
     verified: boolean;
+    api_key: string;
 }
 
 // Public data
