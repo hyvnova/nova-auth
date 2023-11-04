@@ -49,6 +49,7 @@ export async function add_user(data: Partial<UserData>) {
         const collection = db.collection<UserData>("users");
 
         data.token = randomUUID();
+        data.api_key = randomUUID();
 
         // Assign a default avatar 
         data.avatar ||= `/default_avatars/${Math.floor(Math.random() * 4) + 1}.jpg`;
@@ -69,6 +70,28 @@ export async function find_by(fields: Partial<UserData>): Promise<UserData | nul
         return user_data ?? null;
     });
 }
+
+
+/**
+ * Check if a user exists
+ * @param identifier - The token, username, or email to search for
+ * @returns True if the user exists, otherwise false
+ */
+export async function exists(identifier: string): Promise<boolean> {
+    return await with_db(async db => {
+        const collection = db.collection<UserData>("users");
+        const user_data = await collection.findOne<UserData>({
+            $or: [
+                { token: identifier },
+                { username: identifier },
+                { email: identifier },
+                { api_key: identifier }
+            ]
+        });
+        return user_data !== null;
+    });
+}
+
 
 /**
  * Find users matching a query and return specific fields
@@ -104,7 +127,8 @@ export async function get_by(identifier: string): Promise<UserData | null> {
             $or: [
                 { token: identifier },
                 { email: identifier },
-                { username: identifier }
+                { username: identifier },
+                { api_key: identifier}
             ]
         });
         if (!user_data) {

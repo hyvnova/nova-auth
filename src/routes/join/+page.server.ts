@@ -1,5 +1,5 @@
 import type { Actions, PageServerLoad } from "./$types";
-import { find_by, get_by, get_from, add_user } from "../../lib/server/db";
+import {get_by, get_from, add_user } from "../../lib/server/db";
 import { redirect } from "@sveltejs/kit";
 import bcrypt from 'bcryptjs';
 import 'dotenv/config';
@@ -79,7 +79,7 @@ export const actions = {
             await add_user({
                 username,
                 email,
-                password: bcrypt.hashSync(password, 11),
+                password: bcrypt.hashSync(password)
             });
         } else {
             // Otherwise it's a login form

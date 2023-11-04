@@ -1,4 +1,4 @@
-import type { Handle } from '@sveltejs/kit';
+import type { Handle, HandleServerError } from '@sveltejs/kit';
 
 export const handle: Handle = async ({ resolve, event }) => {
 
@@ -22,4 +22,12 @@ export const handle: Handle = async ({ resolve, event }) => {
     response.headers.append('Access-Control-Allow-Origin', `*`);
   }
   return response;
+};
+
+
+export const handleError: HandleServerError = ({ error, event }) => {
+  return {
+    message: 'The route you are trying to access does not exist',
+    code: error
+  };
 };

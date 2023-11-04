@@ -12,29 +12,20 @@
 <script lang="ts">
     import CodeBlock from "$lib/components/CodeBlock.svelte";
 
-    let code_url = `
-    // There are only 3 parameters you need to pass to the URL
-    // 1. who: your username
-    // 2. callback: the URL to redirect to after the user logs in
-    // 3. want: username, avatar, or email 
-    
-    let params = new URLSearchParams({
-        who: "your_username",
-        callback: "https://your-website.com/callback",
-        want: "username,avatar", // Want it's optional, by default it returns username
-    });  
-    
-    let url = "https://nova-auth.vercel.app/auth?" + params.toString(); // This is the URL you need to redirect the user to
-    `
+    let code_url = `params = new URLSearchParams({
+    who: "your api key", // You can get your api key from https://nova-auth.vercel.app/me
+    callback: "https://your-website.com/callback",
+    want: "username,avatar", // Want it's optional, by default it returns username
+});  
 
-    let code_callback = `
-    In your callback page, you'll recieve either of this 2 return types
-    If success is true -> { username: "username", avatar: "avatar_url" }
-    If success is false -> { error: "error message" }
+let url = "https://nova-auth.vercel.app/auth?" + params.toString(); // This is the URL you need to redirect the user to`
 
-    Here's of the response URL might look like:
-    https://your-website.com/callback?success=true&username=your_username&avatar=your_avatar_url
-    `
+    let code_callback = `# In your callback page, you'll recieve either of this 2 return types
+1. If success is true -> { token: access_token }
+2. If success is false -> { error: "error message" }
+
+# Here's of the response URL might look like:
+- https://your-website.com/callback?success=true&token=access_token`
 </script>
 
 <main class="p-6 flex flex-col items-center justify-center">

@@ -18,6 +18,6 @@ export const load: PageServerLoad = async ({ cookies }) => {
     // Otherwise, return the user data
     return {
         username: user.username,
-        email: user.email
+        key: user.api_key,
     }
 }

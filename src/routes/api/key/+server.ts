@@ -1,19 +1,14 @@
 /*
-    Porpuse: Manage API keys
-    Method: POST
+    Porpuse: Manage user's API key
 
-    Parameters:
-        action: string (generate, delete)
+    Methods: 
+        GET -> Generate new API key
+        DELETE -> Delete API key
 
     Returns:
         200: OK
         400: Bad Request
         401: Unauthorized
-        500: Internal Server Error
-
-
-    API key generation:
-        username + random string  
 */
 
 
@@ -21,47 +16,41 @@ import { update_user } from "$lib/server/db";
 import { json, type RequestHandler } from "@sveltejs/kit";
 import { v4 as uuid } from "uuid"; 
 
-enum ActionType {
-    generate = "generate",
-    delete = "delete", // Delete account
-}
+// Generate new API key
+export const GET: RequestHandler = async ({ cookies }) => {
 
-type ExpectedParams = {
-    action?: ActionType,
-}
-
-export const POST: RequestHandler = async ({ request, cookies }) => {
-    let data: ExpectedParams = await request.json();
-
-    let { action } = data;
-
-    // Check if all parameters are present
-    if (!action) {
-        return json({
-            error: "Missing parameters. Required parameters: action: string (generate, delete)"
-        }, { status: 400 })
-    }
-
-    // Check if action is valid
-    if (!(action in ActionType)) {
-        return json({
-            error: "Invalid action. Ex.valid actions: generate, delete"
-        }, { status: 400 })
-    }
-
+    let token = cookies.get("token");
 
     // Check if user is logged in
-    if (!cookies.get("token")) {
+    if (!token) {
         return json({
             error: "You are not authorized to perform this action"
         }, { status: 400 })
     }
+    
+    let key = uuid();
 
-    switch (action) {
-        case ActionType.generate:
-                   
+    update_user(token, { api_key: key });
+    return json({
+        key: key
+    }, { status: 200 })
+
+}
+
+
+// Delete API key
+export const DELETE: RequestHandler = async ({ request, cookies }) => {
+    let token = cookies.get("token");
+
+    // Check if user is logged in
+    if (!token) {
+        return json({
+            error: "You are not authorized to perform this action"
+        }, { status: 401 })
     }
 
-    return json({}, { status: 200 })
-
+    update_user(token, { api_key: "" });
+    return json({
+        success: true
+    }, { status: 200 })
 }
