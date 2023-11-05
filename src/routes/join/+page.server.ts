@@ -7,7 +7,7 @@ import type { UserData } from "$lib/types";
 
 
 // Callback url to redirect to after authentication
-let redirect_callback: string | null;
+let auth_callback: string | null = null;
 
 
 /**
@@ -15,49 +15,19 @@ let redirect_callback: string | null;
  * If logged in, redirects to /me
  */
 export const load: PageServerLoad = async ({ cookies, url }) => {
-    // Get callback url from url params (if present, this is used when authenticating)
-    let params = new URLSearchParams(url.search);
-    let callback = params.get("callback");
-    let want = params.get("want");  // What fields to return, separated by commas. Possible values: email, avatar, username
-    
-    if (callback) {
-        callback = decodeURIComponent(callback);
-
-        // If callback is present, then want is present too
-        // @ts-ignore
-        want = want.split(",");
-    }
-
-    let token = cookies.get("token");
-
-    if (token && await get_by(token)) {
-
-        // If callback is present, then redirect to callback
-        if (callback) {
-            let params = new URLSearchParams({
-                success: "true"
-            });
-
-            let user = await get_by(token) as UserData;
-
-            // Reduce user data to avoid leaking data
-            let { username, email, avatar } = user;
-            let reduced_user_data = { username, email, avatar };
-
-            // @ts-ignore
-            for (let field of want) {
-                // @ts-ignore
-                params.append(field, reduced_user_data[field]);
-            }
-
-            throw redirect(302, callback + "?" + params.toString());
-        }
-
+    // If token is present, then user is already logged in -> redirect to /me
+    if (cookies.get("token")) {
         throw redirect(302, "/me");
     }
 
-    // If not logged in, but callback is present save it to callback variable
-    redirect_callback = callback;
+    // Get callback url from url params (if present, this is used when authenticating)
+    let params = new URLSearchParams(url.search);
+    let callback = params.get("callback");
+
+    if (callback) {
+        auth_callback = decodeURIComponent(callback) + "?success=true&access_token=" + params.get("access_token");
+    }
+
 }
 
 /**
@@ -108,25 +78,9 @@ export const actions = {
             secure: process.env.NODE_ENV === "production"
         });
 
-        // If callback is present, then redirect to callback
-        if (redirect_callback) {
-            let params = new URLSearchParams({
-                success: "true"
-            });
-
-            let user = await get_by(token) as UserData;
-
-            // Reduce user data to avoid leaking data
-            let { username, email, avatar } = user;
-            let reduced_user_data = { username, email, avatar };
-
-            // @ts-ignore
-            for (let field of want) {
-                // @ts-ignore
-                params.append(field, reduced_user_data[field]);
-            }
-
-            throw redirect(302, redirect_callback + "?" + params.toString());
+        // If auth_params is present, then it's an authentication request
+        if (auth_callback) {
+            throw redirect(302, auth_callback);
         }
 
         // If everything is correct, then redirect to /me

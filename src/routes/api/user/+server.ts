@@ -19,7 +19,7 @@ import { json, type RequestHandler } from "@sveltejs/kit";
 export const GET: RequestHandler = async ({ url, request }) => {
 
     // token is at authoriztion header. Ex <token>
-    let token = request.headers.get("Authorization");
+    let token = request.headers.get("authorization");
 
     // Verify that all parameters are present
     if (!token) {
@@ -54,7 +54,7 @@ export const GET: RequestHandler = async ({ url, request }) => {
     }
 
     let data: Partial<UserData> = {};
-    for (let field of parts.wanted) {
+    for (let field of parts.want) {
         if (field == "avatar") {
             data[field] = url.origin + user[field];
             continue;

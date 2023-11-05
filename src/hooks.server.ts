@@ -27,7 +27,8 @@ export const handle: Handle = async ({ resolve, event }) => {
 
 export const handleError: HandleServerError = ({ error, event }) => {
   return {
-    message: 'The route you are trying to access does not exist',
+    // @ts-ignore
+    message: error.message, 
     code: error
   };
 };

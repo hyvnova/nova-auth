@@ -6,6 +6,13 @@ export enum CheckResult {
 }
 
 
+export type DataAccess = {
+    who: string; // Api key
+    want: string[]; // What they have access to
+    last_used: number; // Last time they used it (seconds since epoch)
+    uses: number; // How many times they have used it
+}
+
 export type UserData = {
     username: string;
     password: string; // Hashed password
@@ -14,6 +21,7 @@ export type UserData = {
     avatar: string;
     verified: boolean;
     api_key: string;
+    accesses: DataAccess[]; // Accesses to user data 
 }
 
 // Public data

@@ -1,8 +1,6 @@
 <script lang="ts">
     import ActionCard from "$lib/components/ActionCard.svelte";
     import {
-        faAdjust,
-        faB,
         faEye,
         faGear,
         faRepeat,

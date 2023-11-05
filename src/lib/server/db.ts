@@ -50,6 +50,7 @@ export async function add_user(data: Partial<UserData>) {
 
         data.token = randomUUID();
         data.api_key = randomUUID();
+        data.accesses = []; // No accesses yet
 
         // Assign a default avatar 
         data.avatar ||= `/default_avatars/${Math.floor(Math.random() * 4) + 1}.jpg`;
