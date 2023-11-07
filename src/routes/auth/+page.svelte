@@ -3,6 +3,7 @@
 	import { faGithub } from "@fortawesome/free-brands-svg-icons";
 	import { faCertificate } from "@fortawesome/free-solid-svg-icons";
 	import type { PageServerData } from "./$types";
+	import { redirect } from "@sveltejs/kit";
 
 	export let data: PageServerData;
 

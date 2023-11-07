@@ -16,6 +16,7 @@
 		"@sveltejs/kit": "^1.20.4",
 		"@types/bcryptjs": "^2.4.4",
 		"@types/node": "^20.6.1",
+		"@types/uuid": "^9.0.6",
 		"@zerodevx/svelte-toast": "^0.9.5",
 		"autoprefixer": "^10.4.15",
 		"bcryptjs": "^2.4.3",
@@ -29,6 +30,7 @@
 		"svelte-loading-spinners": "^0.3.4",
 		"tailwindcss": "^3.3.3",
 		"typescript": "^5.0.0",
+		"uuid": "^9.0.1",
 		"vite": "^4.4.2"
 	},
 	"type": "module",

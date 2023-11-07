@@ -12,7 +12,7 @@
 <script lang="ts">
     import CodeBlock from "$lib/components/CodeBlock.svelte";
 
-    let code_url = `params = new URLSearchParams({
+  let code_url = `params = new URLSearchParams({
     who: "your api key", // You can get your api key from https://nova-auth.vercel.app/me
     callback: "https://your-website.com/callback",
     want: "username,avatar,verified", // You can request any of the following fields: username, avatar, verified, email
@@ -26,7 +26,6 @@ let url = "https://nova-auth.vercel.app/auth?" + params.toString(); // This is t
 
 # Here's how the response URL might look like:
 - https://your-website.com/callback?success=true&token=access_token`
-
 
     let code_using = `// This is how you can use the access token to get the user's data
 // request user info

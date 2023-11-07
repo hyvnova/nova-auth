@@ -10,7 +10,7 @@
 */
 
 
-import { break_access_token } from "$lib/server/acess_token";
+import { break_access_token } from "$lib/server/access_token";
 import { exists, get_by } from "$lib/server/db";
 import type { UserData } from "$lib/types";
 import { json, type RequestHandler } from "@sveltejs/kit";

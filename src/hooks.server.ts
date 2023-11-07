@@ -24,11 +24,3 @@ export const handle: Handle = async ({ resolve, event }) => {
   return response;
 };
 
-
-export const handleError: HandleServerError = ({ error, event }) => {
-  return {
-    // @ts-ignore
-    message: error.message,
-    code: error
-  };
-};

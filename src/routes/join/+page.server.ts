@@ -4,7 +4,7 @@ import { redirect } from "@sveltejs/kit";
 import bcrypt from 'bcryptjs';
 import 'dotenv/config';
 import type { UserData } from "$lib/types";
-import { break_access_token, type AccessTokenType, generate_access_token } from "$lib/server/acess_token";
+import { break_access_token, type AccessTokenType, generate_access_token } from "$lib/server/access_token";
 
 
 // Callback url to redirect to after authentication

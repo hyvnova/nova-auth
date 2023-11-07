@@ -1,7 +1,7 @@
 import { get_by, get_from } from "$lib/server/db";
 import { redirect } from "@sveltejs/kit";
 import type { PageServerLoad } from "./$types";
-import { generate_access_token } from "$lib/server/acess_token";
+import { generate_access_token } from "$lib/server/access_token";
 
 
 const WantPossibleValues = ["email", "avatar", "username", "verified"];
