@@ -1,13 +1,15 @@
 import type { Actions, PageServerLoad } from "./$types";
-import { find_by, get_by, get_from, add_user } from "../../lib/server/db";
+import { get_by, get_from, add_user } from "../../lib/server/db";
 import { redirect } from "@sveltejs/kit";
 import bcrypt from 'bcryptjs';
 import 'dotenv/config';
 import type { UserData } from "$lib/types";
+import { break_access_token, type AccessTokenType, generate_access_token } from "$lib/server/acess_token";
 
 
 // Callback url to redirect to after authentication
-let redirect_callback: string | null;
+let auth_callback: string | null = null;
+let parcial_token: string | null = null; // used to create a access token
 
 
 /**
@@ -15,49 +17,19 @@ let redirect_callback: string | null;
  * If logged in, redirects to /me
  */
 export const load: PageServerLoad = async ({ cookies, url }) => {
-    // Get callback url from url params (if present, this is used when authenticating)
-    let params = new URLSearchParams(url.search);
-    let callback = params.get("callback");
-    let want = params.get("want");  // What fields to return, separated by commas. Possible values: email, avatar, username
-    
-    if (callback) {
-        callback = decodeURIComponent(callback);
-
-        // If callback is present, then want is present too
-        // @ts-ignore
-        want = want.split(",");
-    }
-
-    let token = cookies.get("token");
-
-    if (token && await get_by(token)) {
-
-        // If callback is present, then redirect to callback
-        if (callback) {
-            let params = new URLSearchParams({
-                success: "true"
-            });
-
-            let user = await get_by(token) as UserData;
-
-            // Reduce user data to avoid leaking data
-            let { username, email, avatar } = user;
-            let reduced_user_data = { username, email, avatar };
-
-            // @ts-ignore
-            for (let field of want) {
-                // @ts-ignore
-                params.append(field, reduced_user_data[field]);
-            }
-
-            throw redirect(302, callback + "?" + params.toString());
-        }
-
+    // If token is present, then user is already logged in -> redirect to /me
+    if (cookies.get("token")) {
         throw redirect(302, "/me");
     }
 
-    // If not logged in, but callback is present save it to callback variable
-    redirect_callback = callback;
+    // Get callback url from url params (if present, this is used when authenticating)
+    let params = new URLSearchParams(url.search);
+
+    let callback_url = params.get("redirect");
+    if (callback_url) {
+        auth_callback = decodeURIComponent(callback_url) as string;
+        parcial_token = params.get("parcial") as string;
+    }
 }
 
 /**
@@ -79,7 +51,7 @@ export const actions = {
             await add_user({
                 username,
                 email,
-                password: bcrypt.hashSync(password, 11),
+                password: bcrypt.hashSync(password)
             });
         } else {
             // Otherwise it's a login form
@@ -93,7 +65,7 @@ export const actions = {
 
         // Get token from database to check if user exists / everything is correct
         let token = await get_from(username, "token");
-        
+
         if (!token) {
             return { success: false, error: "User not found" };
         }
@@ -103,30 +75,13 @@ export const actions = {
             path: "/",
             secure: process.env.NODE_ENV === "production"
         });
-        cookies.set("username", username, {
-            path: "/",
-            secure: process.env.NODE_ENV === "production"
-        });
 
-        // If callback is present, then redirect to callback
-        if (redirect_callback) {
-            let params = new URLSearchParams({
-                success: "true"
-            });
-
-            let user = await get_by(token) as UserData;
-
-            // Reduce user data to avoid leaking data
-            let { username, email, avatar } = user;
-            let reduced_user_data = { username, email, avatar };
-
-            // @ts-ignore
-            for (let field of want) {
-                // @ts-ignore
-                params.append(field, reduced_user_data[field]);
-            }
-
-            throw redirect(302, redirect_callback + "?" + params.toString());
+        // If auth_params is present, then it's an authentication request
+        if (auth_callback) {
+            // Create access token
+            let {who, want} = break_access_token(parcial_token as string) as AccessTokenType;
+            auth_callback += "?success=true&token=" + encodeURIComponent(await generate_access_token(who, username, want));
+            throw redirect(302, auth_callback);
         }
 
         // If everything is correct, then redirect to /me

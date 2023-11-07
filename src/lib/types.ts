@@ -5,7 +5,6 @@ export enum CheckResult {
     empty = "empty" // When the value is empty, no "feedback" is shown
 }
 
-
 export type UserData = {
     username: string;
     password: string; // Hashed password
@@ -13,6 +12,7 @@ export type UserData = {
     token: string;
     avatar: string;
     verified: boolean;
+    api_key: string;
 }
 
 // Public data

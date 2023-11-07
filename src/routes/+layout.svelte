@@ -1,5 +1,6 @@
 <script>
-	import "$lib/css/app.css";
+	import "@picocss/pico/css/pico.min.css";
+	import "./../app.css";
 
 	import { SvelteToast } from "@zerodevx/svelte-toast";
 
@@ -25,13 +26,6 @@
 	const transitionOut = { easing: cubicIn, y: -y, duration };
 </script>
 
-<svelte:head>
-	<link
-		rel="stylesheet"
-		href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css"
-		
-	/>
-</svelte:head>
 
 {#if isLoading}
 	<BarLoader />

@@ -1,11 +1,11 @@
-import type { Handle } from '@sveltejs/kit';
+import type { Handle, HandleServerError } from '@sveltejs/kit';
 
 export const handle: Handle = async ({ resolve, event }) => {
 
   // Apply CORS header for API routes
   if (event.url.pathname.startsWith('/api')) {
     // Required for CORS to work
-    if(event.request.method === 'OPTIONS') {
+    if (event.request.method === 'OPTIONS') {
       return new Response(null, {
         headers: {
           'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
@@ -22,4 +22,13 @@ export const handle: Handle = async ({ resolve, event }) => {
     response.headers.append('Access-Control-Allow-Origin', `*`);
   }
   return response;
+};
+
+
+export const handleError: HandleServerError = ({ error, event }) => {
+  return {
+    // @ts-ignore
+    message: error.message,
+    code: error
+  };
 };

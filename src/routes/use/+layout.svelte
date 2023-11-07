@@ -1,17 +1,7 @@
 <script>
     import SideBar from "$lib/components/SideBar.svelte";
-
+    /** * TODO: examples for side bar */
 </script>
 
 
-<!-- Sidebar -->
-<aside>
-    <SideBar items={[
-        { name: "Quick Start", route: "/use" },
-        { name: "Example", route: "/"},
-        { name: "Example", route: "/"}
-    ]}/>
-</aside>
-<main>
-    <slot />
-</main>
+<slot />

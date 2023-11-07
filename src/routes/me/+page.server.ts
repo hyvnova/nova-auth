@@ -11,13 +11,13 @@ export const load: PageServerLoad = async ({ cookies }) => {
 
     // Get the user data from the token
     const user = await get_by(token);
-    
+
     // If the user is not found, return to /join
     if (!user) { throw redirect(302, "/join") }
 
     // Otherwise, return the user data
     return {
         username: user.username,
-        email: user.email
+        key: user.api_key,
     }
 }

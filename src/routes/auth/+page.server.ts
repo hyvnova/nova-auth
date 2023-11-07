@@ -1,102 +1,69 @@
-import { get_by } from "$lib/server/db";
-import { redirect, type Actions } from "@sveltejs/kit";
+import { get_by, get_from } from "$lib/server/db";
+import { redirect } from "@sveltejs/kit";
 import type { PageServerLoad } from "./$types";
+import { generate_access_token } from "$lib/server/acess_token";
 
 
-type WantedFields = "email" | "avatar" | "username";
-const HOST = import.meta.env.DEV ? "http://localhost:5174" : import.meta.env.HOST as string;
+const WantPossibleValues = ["email", "avatar", "username", "verified"];
 
 export const load: PageServerLoad = async ({ cookies, url }) => {
+
     let params = new URLSearchParams(url.search);
 
     let callback = decodeURIComponent(params.get("callback") || ""); // URL to redirect to after authorization
-    let who = decodeURIComponent(params.get("who") || ""); // Username or email
-    let want = decodeURIComponent(params.get("want") || "").split(",") as WantedFields[]; // What data to return, separated by commas. Possible values: email, avatar, username
+    let who = decodeURIComponent(params.get("who") || ""); // Api key
+    let want = decodeURIComponent(params.get("want") || "").split(",") as string[]; // What data to return, separated by commas.
 
-
-    if (!want.includes("username")) {
-        want.push("username");
-    }
 
     // Verify that all parameters are present
-    if (!callback || !who) {
-        throw redirect(302, callback + "?success=false&error=" + encodeURIComponent("Missing parameters. Required parameters: callback (callback url), who (nova-auth usarname), want (comma-separated Ex. email,avatar)"));
+    if (!callback || !who || !want) {
+        throw redirect(302, callback + "?success=false&error=" + encodeURIComponent("Missing parameters. Required parameters: callback (callback url), who (nova-auth API key), want (comma-separated Ex. username,email,avatar)"));
     }
 
     // Verify that the user exists
-    let user = await get_by(who);
+    let requester = await get_by(who);
 
-    if (!user) {
+    if (!requester) {
         throw redirect(302, callback + "?success=false&error=" + encodeURIComponent("Invaled `who` parameter. User not found."));
     }
 
     // Validate requested data
     for (let field of want) {
-        if (!["email", "avatar", "username"].includes(field)) {
-            throw redirect(302, callback + "?success=false&error=" + encodeURIComponent("Invaled `want` parameter. Possible values: email, avatar, username"));
+        if (!WantPossibleValues.includes(field)) {
+            throw redirect(302, callback + "?success=false&error=" + `Invalid field: ${field} at want parameter. Possible values: ` + WantPossibleValues.join(", "));
         }
     }
-
-    // get requester user
-    let requester = await get_by(who);
-
-    // If user doesn't exist, redirect to callback
-    if (!requester) {
-        throw redirect(302, callback + "?success=false&error=" + encodeURIComponent("Invaled `who` parameter. User not found."));
-    }
-
     let return_data = {
-        username: requester.username,
-        avatar: requester.avatar,
+        req: {
+            username: requester.username,
+            avatar: requester.avatar,
+            verified: requester.verified,
+        },
+        callback,
         want,
-        verified: requester.verified
+        logged_in: false
     }
 
-    // Check if user it's already logged in
+    // Check if user it's already logged in, if so, user will be asked to confirm if they want authorize requester to access their data
     let token = cookies.get("token");
     if (token) {
 
         // Get user data
-        let user_data = await get_by(token);
+        let username = await get_from(token, 'username') as string;
+        let access_token = encodeURIComponent(await generate_access_token(who, username, want));
 
-        // If user doesn't exist, redirect to callback
-        if (!user_data) {
-            throw redirect(302, callback + "?success=false&error=" + encodeURIComponent("Failed to authenticate user. User not found."));
-        }
-
-        // Reduce user data to avoid leaking data
-        let { username, email, avatar } = user_data;
-
-        // Add host to avatar if it's a relative url
-        if (avatar.startsWith("/")) {
-            avatar = HOST + avatar;
-        }
-
-        let reduced_user_data = { username, email, avatar };
-
-        let params = new URLSearchParams({
-            success: "true",
-        });
-
-        for (let field of want) {
-            // @ts-ignore
-            params.append(field, reduced_user_data[field]);
-        }
-          
         return {
             ...return_data,
             logged_in: true,
-            callback: callback + "?" + params.toString(),
-            auth_username: user_data.username // Username of the user that is logged in
+            access_token,
+            username // Username of the user that is logged in
         }
     }
 
-
-
+    // If user is not logged in, they will be asked to login or deny access to their data
     return {
         ...return_data,
-        logged_in: false,
-        callback: encodeURIComponent(callback)
+        partcial_token: encodeURIComponent(await generate_access_token(who, "", want)) // Partial token, used to avoid leaking api key
     }
 
 };

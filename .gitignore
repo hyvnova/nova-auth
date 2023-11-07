@@ -12,3 +12,4 @@ vite.config.ts.timestamp-*
 .prettierrc
 .npmrc
 secrets.env
+package-lock.json
