@@ -1,10 +1,12 @@
 <script lang="ts">
   import type { ActionData } from "./$types";
   import { CheckResult } from "$lib/types";
-  import { toast } from "@zerodevx/svelte-toast";
+
   import UsernameInput from "$lib/components/UsernameInput.svelte";
   import EmailInput from "$lib/components/EmailInput.svelte";
     import { writable } from "svelte/store";
+  import toast from "$lib/stores/toast";
+  import Toast from "$lib/components/Toast.svelte";
 
   let username = "";
   let username_available = writable(CheckResult.empty);
@@ -16,14 +18,10 @@
   export let form: ActionData;
 
   $: if (form) {
-    // If there was an error, show it
-    toast.push(form.error as string, {
-      theme: {
-        toast: "bg-red-100 text-white",
-        "--toastBackground": "#EF4444",
-        "--toastProgressBackground": "white",
-      },
-      dismissable: false,
+    toast.set({
+      title: "You fucked up",
+      message: form.error,
+      type: "error",
       duration: 3000,
     });
   }
@@ -32,6 +30,8 @@
 <!-- If form submission had an error -->
 
 <div class="flex flex-col justify-center items-center h-screen">
+  <Toast />
+
   <main class="slide-up m-1 border backdrop-blur-md rounded-md p-6 shadow-xl">
     <form
       class="p-1 flex flex-col items-center justify-center transition-all duration-500 ease-in-out"

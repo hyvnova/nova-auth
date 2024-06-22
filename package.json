@@ -3,6 +3,7 @@
 	"version": "1.0",
 	"private": true,
 	"scripts": {
+		"example": "cd examples/auth-test && vite dev",
 		"dev": "vite dev",
 		"build": "vite build",
 		"preview": "vite preview",

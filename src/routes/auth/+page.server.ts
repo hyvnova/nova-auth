@@ -20,11 +20,17 @@ export const load: PageServerLoad = async ({ cookies, url }) => {
         throw redirect(302, callback + "?success=false&error=" + encodeURIComponent("Missing parameters. Required parameters: callback (callback url), who (nova-auth API key), want (comma-separated Ex. username,email,avatar)"));
     }
 
+
     // Verify that the user exists
     let requester = await get_by(who);
 
     if (!requester) {
         throw redirect(302, callback + "?success=false&error=" + encodeURIComponent("Invaled `who` parameter. User not found."));
+    }
+
+    // Verify that the callback is of a trusted domian of the requester 
+    if (!isTrustedDomain(callback, requester.trusted_domains)) {
+        throw redirect(302, callback + "?success=false&error=" + encodeURIComponent("Invalid callback URL. It must be a trusted domain of the requester. If you are the owner of this API ID, Check your `Trusted Domains` sections in your account settings."));
     }
 
     // Validate requested data
@@ -67,3 +73,33 @@ export const load: PageServerLoad = async ({ cookies, url }) => {
     }
 
 };
+
+
+function isTrustedDomain(callback: string, trustedDomains: string[]): boolean {
+  // Helper function to normalize URLs (removes trailing slashes)
+  const normalizeUrl = (url: string) => url.replace(/\/+$/, "");
+
+  try {
+    const callbackUrl = new URL(callback);
+
+    return trustedDomains.some((domain) => {
+      const trustedUrl = new URL(domain);
+      // Normalize both URLs for comparison
+      const normalizedCallbackOrigin = normalizeUrl(callbackUrl.origin);
+      const normalizedTrustedOrigin = normalizeUrl(trustedUrl.origin);
+
+      // Check if the origins match
+      if (normalizedCallbackOrigin !== normalizedTrustedOrigin) {
+        return false;
+      }
+
+      // Check if the callback path starts with the trusted domain path
+      const normalizedCallbackPath = normalizeUrl(callbackUrl.pathname);
+      const normalizedTrustedPath = normalizeUrl(trustedUrl.pathname);
+      return normalizedCallbackPath.startsWith(normalizedTrustedPath);
+    });
+  } catch (error) {
+    console.error("Invalid URL:", error);
+    return false;
+  }
+}

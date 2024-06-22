@@ -1,3 +1,5 @@
+import type { Writable } from "svelte/store";
+
 export enum CheckResult {
     available = "available",
     invalid = "invalid",
@@ -6,6 +8,7 @@ export enum CheckResult {
 }
 
 export type UserData = {
+    trusted_domains: string[];
     username: string;
     password: string; // Hashed password
     email: string;
@@ -20,4 +23,12 @@ export type ProfileData = {
     username: string;
     avatar: string;
 }
+
+
+export type ToastType = Writable<{
+  type: "error" | "info";
+  title: string;
+  message: string;
+  duration?: number;
+} | null>;
 

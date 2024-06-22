@@ -2,8 +2,6 @@
 	import "@picocss/pico/css/pico.min.css";
 	import "./../app.css";
 
-	import { SvelteToast } from "@zerodevx/svelte-toast";
-
 	import { fly } from "svelte/transition";
 	import { cubicIn, cubicOut } from "svelte/easing";
 
@@ -33,7 +31,6 @@
 
 {#key data.pathname}
 	<div in:fly={transitionIn} out:fly={transitionOut}>
-		<SvelteToast />
 		<slot />
 	</div>
 {/key}

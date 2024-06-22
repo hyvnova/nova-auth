@@ -21,38 +21,39 @@
 let url = "https://nova-auth.vercel.app/auth?" + params.toString(); // This is the URL you need to redirect the user to`
 
     let code_callback = `# In your callback page, you'll recieve either of this 2 return types
-1. If success is true -> { token: URL encoded access_token }
-2. If success is false -> { error: "declined" or "error message" }
+1. If success is true ->  token =  URL encoded access token
+2. If success is false -> error = error message
 
 # Here's how the response URL might look like:
 - https://your-website.com/callback?success=true&token=access_token`
 
     let code_using = `// This is how you can use the access token to get the user's data
 // request user info
-let res = await fetch(endpoint + '/api/user', {
+let res = await fetch('https://nova-auth.vercel.app/api/user', {
     method: 'GET',
     headers: {
-        'Authorization': \`\${accessToken}\`
+        'Authorization': accessToken
     }
 });
 
-// check if the response is ok
-if (res.ok) {
-    // get the response body
-    let data = await res.json();
-    
-    // do something with the data. Remember that only the fields you requested will be returned
-    let user: {
-        username: string, 
-        avatar: string, 
-        verified: boolean
-    } = data;
+// Handle errors...
+// 400 - Bad Request: No access token provided
+// 401 - Unauthorized: Invalid access token
+if (!res.ok) {
+    // handle the error
+    return;
+}
 
-    console.log(user);
+// get the response body -- User data
+let data = await res.json();
 
-} else {
-    // handle error
-}`
+// do something with the data. Remember that only the fields you requested will be returned
+let user: {
+    username: string, 
+    avatar: string, 
+    verified: boolean
+} = data;
+`
 </script>
 
 <main class="container p-6 flex flex-col items-center justify-center">
@@ -68,5 +69,10 @@ if (res.ok) {
 
     <div class="container mx-auto">
         <CodeBlock language="javascript" code={code_using} header="3. Using the access token"/>
+    </div>
+
+    <div class="container mx-auto my-8">
+        <p class="text-center">That's it! You can now use NoVa Auth to authenticate users on your website.</p>
+        <p class="text-md text-center">Acess Tokens are <b>NOT TIME LIMITED</b>, once approved the can be used forever until users remokes the access.</p>
     </div>
 </main>

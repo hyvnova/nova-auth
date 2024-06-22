@@ -48,8 +48,11 @@ export async function add_user(data: Partial<UserData>) {
     await with_db(async db => {
         const collection = db.collection<UserData>("users");
 
+        // ! USER DATA INIT
+
         data.token = randomUUID();
         data.api_key = randomUUID();
+        data.trusted_domains = [];
 
         // Assign a default avatar 
         data.avatar ||= `/default_avatars/${Math.floor(Math.random() * 4) + 1}.jpg`;
@@ -122,21 +125,22 @@ export async function find_matching(query: string, fields: (keyof UserData)[]): 
  */
 export async function get_by(identifier: string): Promise<UserData | null> {
     return await with_db(async db => {
-        const collection = db.collection("users");
-        const user_data = await collection.findOne<UserData>({
-            $or: [
-                { token: identifier },
-                { email: identifier },
-                { username: identifier },
-                { api_key: identifier }
-            ]
-        });
-        if (!user_data) {
-            return null;
-        }
-        // Remove token from user data
-        user_data.token = "";
-        return user_data;
+      const collection = db.collection("users");
+      const user_data = await collection.findOne<UserData>({
+        $or: [
+          { token: identifier },
+          { email: identifier },
+          { username: identifier },
+          { api_key: identifier },
+        ],
+      });
+      if (!user_data) {
+        return null;
+      }
+      // Remove token from user data
+      //@ts-ignore
+      delete user_data.token;
+      return user_data;
     });
 }
 
@@ -173,6 +177,9 @@ export async function update_user(identifier: string, data: Partial<UserData>) {
     return await with_db(async db => {
 
         const collection = db.collection("users");
+
+        // For god sake, please don't update the token
+        delete data.token;
 
         // Update the user
         await collection.updateOne({

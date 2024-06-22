@@ -2,6 +2,8 @@
 import 'dotenv/config';
 import crypto from 'crypto';
 
+let silly_string = process.env.ACCESS_TOKEN_SECRET || "Please don't forget the token UnU would be very bad for security. Cry BOZO LMAO";
+
 /**
  * Generate an access token
  * token will be a encrypted containing who::username::want 
@@ -12,7 +14,7 @@ import crypto from 'crypto';
  */
 export async function generate_access_token(who: string, username: string, want: string[]) {
     const tokenString = `${who}::${username}::${want.join(',')}`;
-    const cipher = crypto.createCipher('aes-256-cbc', process.env.ACCESS_TOKEN_SECRET as string);
+    const cipher = crypto.createCipher('aes-256-cbc', silly_string);
     let encryptedToken = cipher.update(tokenString, 'utf8', 'base64');
     encryptedToken += cipher.final('base64');
 
@@ -33,7 +35,7 @@ export type AccessTokenType = {
 export function break_access_token(token: string): AccessTokenType | null {
     if (!token) return null;
     try {
-        const decipher = crypto.createDecipher('aes-256-cbc', process.env.ACCESS_TOKEN_SECRET as string);
+        const decipher = crypto.createDecipher('aes-256-cbc', silly_string);
         let decryptedToken = decipher.update(token, 'base64', 'utf8');
         decryptedToken += decipher.final('utf8');
 
