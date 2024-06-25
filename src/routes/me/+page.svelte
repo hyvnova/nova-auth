@@ -151,7 +151,6 @@
               name="domain"
               class="border rounded-md p-2 w-full h-full"
               placeholder="https://example.com"
-              pattern="http[s]?://.*"
               bind:value={domain_input_value}
             />
             <button
